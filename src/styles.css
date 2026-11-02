@@ -298,6 +298,18 @@ button {
 .app-shell {
   min-height: 100vh;
 }
+.backend-warning {
+  position: relative;
+  z-index: 4;
+  width: 100%;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--ink);
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+}
 .topbar {
   height: 98px;
   display: grid;

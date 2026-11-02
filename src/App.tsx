@@ -94,7 +94,8 @@ async function api(path: string, options?: RequestInit) {
 
 export default function App() {
   const [page, setPage] = useState<Page>("sign-in");
-  const [locked, setLocked] = useState(true);
+  const [locked, setLocked] = useState(false);
+  const [backendAvailable, setBackendAvailable] = useState<boolean | null>(null);
   const [passwordConfigured, setPasswordConfigured] = useState(true);
   const [schoolName, setSchoolName] = useState("Lincoln High School");
   const [modal, setModal] = useState(false);
@@ -123,6 +124,7 @@ export default function App() {
 
   const refreshStatus = async () => {
     const status = await api("/status");
+    setBackendAvailable(true);
     setLocked(status.locked);
     setPasswordConfigured(status.passwordConfigured);
     const resetRequiresGuide =
@@ -148,7 +150,10 @@ export default function App() {
   const refreshSettings = async () => setSettings(await api("/settings"));
 
   useEffect(() => {
-    refreshStatus().catch(() => undefined);
+    refreshStatus().catch(() => {
+      setBackendAvailable(false);
+      setLocked(false);
+    });
     refreshTeachers().catch(() => undefined);
   }, []);
   useEffect(() => {
@@ -233,6 +238,12 @@ export default function App() {
 
   return (
     <div className="app-shell">
+      {backendAvailable === false && (
+        <div className="backend-warning" role="status">
+          Backend unavailable. This page can load, but sign-ins and settings will
+          not work until an API server is connected.
+        </div>
+      )}
       <header className="topbar">
         <Logo />
         <nav
