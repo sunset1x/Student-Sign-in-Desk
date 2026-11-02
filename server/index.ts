@@ -142,6 +142,7 @@ app.post("/api/auth/unlock", async (req, res) => {
     updateSettings({
       dev_one_time_password_hash: "",
       dev_one_time_password_expires: "",
+      dev_one_time_password_value: "",
     });
     req.session.admin = true;
     updateSettings({ locked: "false" });
@@ -171,16 +172,43 @@ app.post("/api/dev/one-time-password", async (req, res) => {
   if (!parsed.success || !(await verifyAdministratorPassword(parsed.data.password)))
     return res.status(401).json({ error: "Incorrect administrator password" });
 
+  const existingExpiresAt = Number(setting("dev_one_time_password_expires") || "0");
+  if (setting("dev_one_time_password_hash") && existingExpiresAt > Date.now())
+    return res.status(409).json({ error: "An active one-time password already exists" });
+
   const oneTimePassword = crypto.randomInt(10000000, 100000000).toString();
   const hash = crypto
     .createHash("sha256")
     .update(oneTimePassword)
     .digest("hex");
+  const expiresAt = Date.now() + 10 * 60 * 1000;
   updateSettings({
     dev_one_time_password_hash: hash,
-    dev_one_time_password_expires: String(Date.now() + 10 * 60 * 1000),
+    dev_one_time_password_expires: String(expiresAt),
+    dev_one_time_password_value: oneTimePassword,
   });
-  res.json({ password: oneTimePassword, expiresInMinutes: 10 });
+  res.json({ password: oneTimePassword, expiresAt });
+});
+
+app.post("/api/dev/one-time-password/status", async (req, res) => {
+  const parsed = z.object({ password: z.string() }).safeParse(req.body);
+  if (!parsed.success || !(await verifyAdministratorPassword(parsed.data.password)))
+    return res.status(401).json({ error: "Incorrect administrator password" });
+
+  const expiresAt = Number(setting("dev_one_time_password_expires") || "0");
+  if (expiresAt <= Date.now()) {
+    updateSettings({
+      dev_one_time_password_hash: "",
+      dev_one_time_password_expires: "",
+      dev_one_time_password_value: "",
+    });
+    return res.json({ active: false });
+  }
+  res.json({
+    active: Boolean(setting("dev_one_time_password_hash")),
+    password: setting("dev_one_time_password_value") || "",
+    expiresAt,
+  });
 });
 app.post("/api/auth/logout", (req, res) =>
   req.session.destroy(() => res.json({ ok: true })),

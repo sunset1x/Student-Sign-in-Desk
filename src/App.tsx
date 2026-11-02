@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import {
   Check,
   ChevronLeft,
@@ -61,7 +62,7 @@ function useBackdropDismiss(onDismiss: () => void) {
 }
 
 type Page = "sign-in" | "settings" | "logs";
-type Theme = "forest" | "slate" | "sunset";
+type Theme = "forest" | "slate" | "dark";
 type Teacher = {
   id: number;
   first_name: string;
@@ -110,7 +111,9 @@ export default function App() {
   const [devToolsOpen, setDevToolsOpen] = useState(false);
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = window.localStorage.getItem("skully-theme");
-    return saved === "slate" || saved === "sunset" ? saved : "forest";
+    if (saved === "slate") return "slate";
+    if (saved === "dark" || saved === "sunset") return "dark";
+    return "forest";
   });
 
   useEffect(() => {
@@ -357,7 +360,6 @@ export default function App() {
           </div>
         </div>
       )}
-      <div className="project-credit">A Skully Project</div>
       {devToolsOpen && (
         <DeveloperToolsModal
           theme={theme}
@@ -484,7 +486,7 @@ function StartupGuide({
         </label>
         <fieldset className="startup-theme-selector">
           <legend>Theme</legend>
-          {(["forest", "slate", "sunset"] as Theme[]).map((value) => (
+          {(["forest", "slate", "dark"] as Theme[]).map((value) => (
             <button
               key={value}
               type="button"
@@ -499,7 +501,7 @@ function StartupGuide({
                 <span />
                 <span />
               </span>
-              {({ forest: "Forest", slate: "Slate", sunset: "Purple" })[value]}
+              {({ forest: "Forest", slate: "Slate", dark: "Dark" })[value]}
             </button>
           ))}
         </fieldset>
@@ -978,7 +980,7 @@ function SettingsPage({
               [
                 ["forest", "Forest", "Green and cream"],
                 ["slate", "Slate", "Cool blue gray"],
-                ["sunset", "Purple", "Violet and lavender"],
+                ["dark", "Dark", "Charcoal and graphite"],
               ] as [Theme, string, string][]
             ).map(([value, label, description]) => (
               <button
@@ -1096,7 +1098,7 @@ function SettingsPage({
                     setTeacher({ ...teacher, email: e.target.value })
                   }
                 />
-                <button className="secondary-button" type="submit">
+                <button className="primary-button" type="submit">
                   Add
                 </button>
               </form>
@@ -1343,7 +1345,7 @@ function SettingsPage({
                     onChange={(e) => setRepeatPassword(e.target.value)}
                   />
                 </label>
-                <button className="secondary-button" type="submit">
+                <button className="primary-button directory-add-button" type="submit">
                   Update password
                 </button>
               </form>
@@ -1427,6 +1429,7 @@ function SettingsPage({
           }}
         />
       )}
+      <div className="project-credit">A Skully Project</div>
     </main>
   );
 }
@@ -1630,7 +1633,7 @@ function DirectoryModal({
                   setTeacher({ ...teacher, email: event.target.value })
                 }
               />
-              <button className="secondary-button" type="submit">
+              <button className="primary-button directory-add-button" type="submit">
                 Add teacher
               </button>
             </form>
@@ -1806,7 +1809,7 @@ function DirectoryModal({
                 }}
               />
               <button
-                className="secondary-button"
+                className="primary-button directory-add-button"
                 type="button"
                 onClick={addReason}
               >
@@ -1960,6 +1963,9 @@ function DeveloperToolsModal({
   const [authorized, setAuthorized] = useState(false);
   const [error, setError] = useState("");
   const [oneTimePassword, setOneTimePassword] = useState("");
+  const [oneTimePasswordExpiresAt, setOneTimePasswordExpiresAt] = useState(0);
+  const [oneTimePasswordSeconds, setOneTimePasswordSeconds] = useState(0);
+  const [generatingOneTimePassword, setGeneratingOneTimePassword] = useState(false);
   const [resetPassword, setResetPassword] = useState("");
   const [resetConfirmed, setResetConfirmed] = useState(false);
   const backdrop = useBackdropDismiss(onClose);
@@ -1978,18 +1984,63 @@ function DeveloperToolsModal({
     }
   };
   const generatePassword = async () => {
+    if (oneTimePassword || generatingOneTimePassword) return;
     setError("");
-    setOneTimePassword("");
+    setGeneratingOneTimePassword(true);
     try {
       const result = await api("/dev/one-time-password", {
         method: "POST",
         body: JSON.stringify({ password }),
       });
       setOneTimePassword(result.password);
+      setOneTimePasswordExpiresAt(result.expiresAt);
     } catch (cause) {
       setError((cause as Error).message);
+    } finally {
+      setGeneratingOneTimePassword(false);
     }
   };
+  useEffect(() => {
+    if (!authorized) return;
+    let cancelled = false;
+    const refreshPasswordStatus = async () => {
+      try {
+        const result = await api("/dev/one-time-password/status", {
+          method: "POST",
+          body: JSON.stringify({ password }),
+        });
+        if (!cancelled && result.active) {
+          setOneTimePassword(result.password);
+          setOneTimePasswordExpiresAt(result.expiresAt);
+        } else if (!cancelled) {
+          setOneTimePassword("");
+          setOneTimePasswordExpiresAt(0);
+        }
+      } catch {
+        // The active password is not restored if the status request fails.
+      }
+    };
+    refreshPasswordStatus();
+    const statusTimer = window.setInterval(refreshPasswordStatus, 5000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(statusTimer);
+    };
+  }, [authorized, password]);
+  useEffect(() => {
+    if (!oneTimePasswordExpiresAt) {
+      setOneTimePasswordSeconds(0);
+      return;
+    }
+    const updateTimer = () => {
+      const remaining = Math.max(0, Math.ceil((oneTimePasswordExpiresAt - Date.now()) / 1000));
+      setOneTimePasswordSeconds(remaining);
+      if (remaining === 0) setOneTimePassword("");
+    };
+    updateTimer();
+    const timer = window.setInterval(updateTimer, 1000);
+    return () => window.clearInterval(timer);
+  }, [oneTimePasswordExpiresAt]);
   const resetData = async (event: FormEvent) => {
     event.preventDefault();
     setError("");
@@ -2046,7 +2097,7 @@ function DeveloperToolsModal({
             <section>
               <h3>Theme</h3>
               <div className="theme-selector" role="radiogroup" aria-label="Developer theme">
-                {(["forest", "slate", "sunset"] as Theme[]).map((value) => (
+                {(["forest", "slate", "dark"] as Theme[]).map((value) => (
                   <button
                     key={value}
                     type="button"
@@ -2055,7 +2106,7 @@ function DeveloperToolsModal({
                     className={`theme-option theme-${value} ${theme === value ? "selected" : ""}`}
                     onClick={() => setTheme(value)}
                   >
-                    <span>{({ forest: "Forest", slate: "Slate", sunset: "Purple" })[value]}</span>
+                    <span>{({ forest: "Forest", slate: "Slate", dark: "Dark" })[value]}</span>
                   </button>
                 ))}
               </div>
@@ -2063,12 +2114,24 @@ function DeveloperToolsModal({
             <section>
               <h3>One-time administrator password</h3>
               <p>Valid for one use for 10 minutes.</p>
-              <button className="secondary-button" type="button" onClick={generatePassword}>
-                Generate password
+              <button
+                className="primary-button"
+                type="button"
+                onClick={generatePassword}
+                disabled={Boolean(oneTimePassword) || generatingOneTimePassword}
+              >
+                {oneTimePassword
+                  ? "Code active"
+                  : generatingOneTimePassword
+                    ? "Generating..."
+                    : "Generate password"}
               </button>
               {oneTimePassword && (
                 <div className="one-time-password" aria-live="polite">
                   {oneTimePassword}
+                  <span className="one-time-password-timer">
+                    Expires in {Math.floor(oneTimePasswordSeconds / 60)}:{String(oneTimePasswordSeconds % 60).padStart(2, "0")}
+                  </span>
                 </div>
               )}
             </section>
@@ -2118,7 +2181,7 @@ function ResetModal({
   onCancel: () => void;
 }) {
   const backdrop = useBackdropDismiss(onCancel);
-  return (
+  return createPortal(
     <div className="modal-backdrop" role="presentation" {...backdrop}>
       <form
         className="unlock-modal reset-modal"
@@ -2162,7 +2225,8 @@ function ResetModal({
           </button>
         </div>
       </form>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -2355,6 +2419,7 @@ function UnlockModal({
   onCancel: () => void;
 }) {
   const backdrop = useBackdropDismiss(onCancel);
+  const [showPassword, setShowPassword] = useState(false);
   return (
     <div className="modal-backdrop" role="presentation" {...backdrop}>
       <form
@@ -2375,6 +2440,7 @@ function UnlockModal({
         <div className="modal-icon">
           <LockKeyhole size={24} />
         </div>
+        <p className="unlock-eyebrow">Kiosk security</p>
         <h2 id="unlock-title">Administrator access</h2>
         <p>
           {configured
@@ -2383,13 +2449,26 @@ function UnlockModal({
         </p>
         <label>
           <span>Password</span>
-          <input
-            autoFocus
-            required
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <span className="password-input">
+            <input
+              autoFocus
+              required
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              placeholder="Enter administrator password"
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowPassword((visible) => !visible)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-pressed={showPassword}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </span>
         </label>
         <div className="modal-actions">
           <button type="button" className="secondary-button" onClick={onCancel}>

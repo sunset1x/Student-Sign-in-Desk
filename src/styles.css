@@ -34,20 +34,20 @@
   --accent-hover: #125989;
   --focus-ring: rgba(23, 104, 166, 0.18);
 }
-:root[data-theme="sunset"] {
-  --green: #7c3aed;
-  --sage: #c084fc;
-  --cream: #f8eee7;
-  --border: #ddc6ba;
-  --brand-top: #a855f7;
-  --brand-bottom: #6d28d9;
-  --surface: #fffaff;
-  --surface-soft: #f5edff;
-  --ink: #492b65;
-  --muted: #76668a;
-  --accent-soft: #eadcff;
-  --accent-hover: #6d28d9;
-  --focus-ring: rgba(124, 58, 237, 0.18);
+:root[data-theme="dark"] {
+  --green: #9ca3af;
+  --sage: #d1d5db;
+  --cream: #111827;
+  --border: #374151;
+  --brand-top: #4b5563;
+  --brand-bottom: #111827;
+  --surface: #1f2937;
+  --surface-soft: #374151;
+  --ink: #f9fafb;
+  --muted: #cbd5e1;
+  --accent-soft: #374151;
+  --accent-hover: #6b7280;
+  --focus-ring: rgba(156, 163, 175, 0.25);
 }
 * {
   box-sizing: border-box;
@@ -87,20 +87,201 @@ body {
     ),
     linear-gradient(135deg, #f5faff 0%, #dcecff 48%, #90c9ea 100%);
 }
-:root[data-theme="sunset"] body {
-  color: #492b65;
+:root[data-theme="dark"] body {
+  color: #f9fafb;
   background:
     radial-gradient(
       ellipse at 10% 10%,
-      rgba(192, 132, 252, 0.72) 0%,
-      rgba(192, 132, 252, 0) 48%
+      rgba(107, 114, 128, 0.32) 0%,
+      rgba(107, 114, 128, 0) 48%
     ),
     radial-gradient(
       ellipse at 90% 90%,
-      rgba(124, 58, 237, 0.34) 0%,
-      rgba(124, 58, 237, 0) 52%
+      rgba(17, 24, 39, 0.72) 0%,
+      rgba(17, 24, 39, 0) 52%
     ),
-    linear-gradient(135deg, #fffaf4 0%, #f2e1ff 48%, #c4a4f3 100%);
+    linear-gradient(135deg, #374151 0%, #1f2937 48%, #111827 100%);
+}
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] textarea {
+  border-color: var(--border);
+  color: var(--ink);
+  background: #111827;
+}
+:root[data-theme="dark"] .unlock-modal,
+:root[data-theme="dark"] .modal-card {
+  border-color: var(--border);
+  background: var(--surface);
+  box-shadow: 0 26px 80px rgba(0, 0, 0, 0.55);
+}
+:root[data-theme="dark"] .unlock-modal p,
+:root[data-theme="dark"] .unlock-modal label,
+:root[data-theme="dark"] .modal-heading h2,
+:root[data-theme="dark"] .unlock-modal h2 {
+  color: var(--ink);
+}
+:root[data-theme="dark"] .unlock-eyebrow {
+  color: var(--sage) !important;
+}
+:root[data-theme="dark"] .modal-close {
+  color: var(--ink);
+  background: var(--surface-soft);
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+:root[data-theme="dark"] body,
+:root[data-theme="dark"] .form-card,
+:root[data-theme="dark"] .welcome,
+:root[data-theme="dark"] .page-heading,
+:root[data-theme="dark"] .settings-card,
+:root[data-theme="dark"] .developer-tools-content,
+:root[data-theme="dark"] .theme-option {
+  color: #f8fafc;
+}
+:root[data-theme="dark"] .school-label,
+:root[data-theme="dark"] .welcome p,
+:root[data-theme="dark"] .page-heading p,
+:root[data-theme="dark"] .form-card label > span,
+:root[data-theme="dark"] .unlock-modal p,
+:root[data-theme="dark"] .unlock-modal label,
+:root[data-theme="dark"] .theme-option small,
+:root[data-theme="dark"] .settings-info,
+:root[data-theme="dark"] .section-copy,
+:root[data-theme="dark"] .directory-list-row small,
+:root[data-theme="dark"] .teacher-email,
+:root[data-theme="dark"] .pagination,
+:root[data-theme="dark"] .empty,
+:root[data-theme="dark"] .developer-tools-content p,
+:root[data-theme="dark"] .developer-tools-content h3 {
+  color: #e5e7eb;
+}
+:root[data-theme="dark"] .management-card,
+:root[data-theme="dark"] .danger-card,
+:root[data-theme="dark"] .danger-section,
+:root[data-theme="dark"] .directory-modal,
+:root[data-theme="dark"] .settings-actions,
+:root[data-theme="dark"] .settings-card {
+  border-color: var(--border);
+  background: var(--surface);
+  box-shadow: 0 18px 55px rgba(0, 0, 0, 0.28);
+}
+:root[data-theme="dark"] .danger-section h2,
+:root[data-theme="dark"] .danger-section h3,
+:root[data-theme="dark"] .management-card h2,
+:root[data-theme="dark"] .management-card h3,
+:root[data-theme="dark"] .directory-modal h2,
+:root[data-theme="dark"] .settings-card h2,
+:root[data-theme="dark"] .settings-card h3 {
+  color: var(--sage);
+}
+:root[data-theme="dark"] .topbar,
+:root[data-theme="dark"] .nav-pill,
+:root[data-theme="dark"] .nav-pill button,
+:root[data-theme="dark"] .page-heading h1,
+:root[data-theme="dark"] .management-card h2,
+:root[data-theme="dark"] .settings-heading-row {
+  color: var(--sage);
+}
+:root[data-theme="dark"] .nav-pill {
+  border-color: var(--border);
+  background: rgba(31, 41, 55, 0.96);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
+}
+:root[data-theme="dark"] .nav-pill button {
+  color: var(--muted);
+}
+:root[data-theme="dark"] .nav-pill button:hover,
+:root[data-theme="dark"] .nav-pill button.active {
+  color: var(--ink);
+  background: var(--surface-soft);
+}
+:root[data-theme="dark"] .danger-section p,
+:root[data-theme="dark"] .management-card p,
+:root[data-theme="dark"] .directory-modal > p {
+  color: #d1d5db;
+}
+:root[data-theme="dark"] .settings-info {
+  border-color: var(--border);
+  color: #d1d5db;
+  background: var(--surface-soft);
+}
+.management-card,
+.danger-card,
+.danger-section,
+.directory-modal,
+.settings-actions {
+  border-color: var(--border);
+}
+.danger-section {
+  background: var(--surface);
+}
+.directory-modal {
+  background: var(--surface);
+}
+.teacher-list {
+  border-color: var(--border);
+}
+.teacher-list .teacher-row {
+  border-color: var(--border);
+}
+.teacher-list .teacher-edit-row .row-action,
+.directory-edit-row .row-action {
+  border-color: var(--border);
+  color: var(--ink);
+  background: var(--surface);
+}
+:root[data-theme="dark"] .nav-pill button,
+:root[data-theme="dark"] .brand span,
+:root[data-theme="dark"] .kiosk-hint {
+  color: #d1d5db;
+}
+:root[data-theme="dark"] select option {
+  color: #f9fafb;
+  background: #1f2937;
+}
+:root[data-theme="dark"] .table-card {
+  border-color: var(--border);
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.3);
+}
+:root[data-theme="dark"] th {
+  color: var(--sage);
+  background: var(--surface-soft);
+}
+:root[data-theme="dark"] td {
+  color: var(--ink);
+  border-top-color: var(--border);
+}
+:root[data-theme="dark"] tbody tr:hover {
+  background: var(--accent-soft);
+}
+:root[data-theme="dark"] .refresh-button {
+  border-color: var(--border);
+  color: var(--ink);
+  background: var(--surface-soft);
+}
+:root[data-theme="dark"] .refresh-button:hover {
+  color: var(--sage);
+  background: var(--accent-soft);
+}
+:root[data-theme="dark"] .directory-modal-grid section {
+  border-color: var(--border);
+  background: var(--surface-soft);
+}
+:root[data-theme="dark"] .directory-modal-grid h3,
+:root[data-theme="dark"] .directory-modal-grid label {
+  color: var(--sage);
+}
+:root[data-theme="dark"] .directory-list-row,
+:root[data-theme="dark"] .teacher-row,
+:root[data-theme="dark"] .teacher-list {
+  border-color: var(--border);
+}
+:root[data-theme="dark"] .directory-list-row,
+:root[data-theme="dark"] .teacher-row {
+  background: var(--surface);
+  color: var(--ink);
 }
 button,
 input,
@@ -198,7 +379,7 @@ button {
   gap: 2px;
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 8px 28px rgba(61, 48, 31, 0.08);
-  border: 1px solid rgba(216, 204, 183, 0.65);
+  border: 1px solid var(--border);
 }
 .nav-pill button {
   background: transparent;
@@ -238,6 +419,7 @@ button {
   gap: 8px;
   color: white;
   background: var(--green);
+  border: 1px solid var(--green);
   box-shadow: 0 7px 18px rgba(12, 75, 55, 0.18);
   transition:
     transform 0.18s,
@@ -245,7 +427,17 @@ button {
 }
 .lock-button:hover {
   transform: translateY(-2px);
-  background: #083f2d;
+  background: var(--accent-hover);
+  box-shadow: 0 9px 22px color-mix(in srgb, var(--green) 30%, transparent);
+}
+.lock-button kbd {
+  border-color: color-mix(in srgb, var(--sage) 55%, transparent);
+  color: inherit;
+  background: color-mix(in srgb, var(--ink) 12%, transparent);
+}
+.lock-button[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 .lock-key {
   width: 43px;
@@ -289,7 +481,7 @@ button {
   max-width: 100%;
   margin: 0 auto;
   background: var(--surface);
-  border: 1px solid rgba(216, 204, 183, 0.7);
+  border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: 0 18px 55px rgba(83, 67, 43, 0.1);
   text-align: left;
@@ -325,7 +517,28 @@ select {
   outline: none;
   transition:
     border 0.18s,
-    box-shadow 0.18s;
+    box-shadow 0.18s,
+    background-color 0.18s,
+    transform 0.18s;
+}
+select {
+  appearance: none;
+  padding-right: 46px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 19px) 50%,
+    calc(100% - 14px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+select option {
+  color: var(--ink);
+  background: var(--surface);
+}
+select:focus {
+  transform: translateY(-1px);
 }
 input:focus,
 select:focus {
@@ -398,7 +611,7 @@ select:focus {
   color: var(--green);
   background: rgba(255, 255, 255, 0.82);
   box-shadow: 0 7px 20px rgba(61, 48, 31, 0.08);
-  border: 1px solid rgba(216, 204, 183, 0.65);
+  border: 1px solid var(--border);
 }
 .page-heading-copy {
   min-width: 0;
@@ -409,12 +622,28 @@ select:focus {
 }
 .management-card {
   width: min(860px, 100%);
-  margin: 0 auto 28px;
+  margin: 0 auto 14px;
   padding: 22px 34px 24px;
-  border: 1px solid rgba(216, 204, 183, 0.7);
+  border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface);
   box-shadow: 0 18px 55px rgba(83, 67, 43, 0.08);
+}
+.settings-page > .management-card,
+.settings-page > .settings-card,
+.settings-page > .danger-card {
+  box-shadow: 0 12px 34px color-mix(in srgb, var(--green) 7%, transparent);
+}
+.settings-card {
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+.danger-card {
+  margin-top: 14px;
+}
+.settings-actions {
+  border-top: 1px solid var(--border);
+  background: var(--surface-soft);
 }
 .settings-card {
   margin-top: 0;
@@ -436,7 +665,7 @@ select:focus {
   gap: 8px;
   color: var(--green);
   background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(216, 204, 183, 0.65);
+  border: 1px solid var(--border);
   box-shadow: 0 6px 18px rgba(61, 48, 31, 0.06);
   font-size: 13px;
   font-weight: 700;
@@ -592,11 +821,11 @@ select:focus {
 .theme-slate .theme-preview span:not(:first-child) {
   background: #58a9d9;
 }
-.theme-sunset .theme-preview span:first-child {
-  background: #7c3aed;
+.theme-dark .theme-preview span:first-child {
+  background: #111827;
 }
-.theme-sunset .theme-preview span:not(:first-child) {
-  background: #c084fc;
+.theme-dark .theme-preview span:not(:first-child) {
+  background: #9ca3af;
 }
 .theme-selected-mark {
   position: absolute;
@@ -664,6 +893,17 @@ select:focus {
 .directory-edit-row input {
   height: 42px;
 }
+.directory-add-button {
+  height: 44px;
+  border: 1px solid var(--accent-hover);
+  border-radius: 6px;
+  background: var(--green);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--green) 18%, transparent);
+}
+.directory-add-button:hover {
+  border-color: var(--sage);
+  background: var(--accent-hover);
+}
 .directory-add-form input:nth-child(3),
 .directory-add-form .secondary-button {
   grid-column: 1 / -1;
@@ -678,7 +918,7 @@ select:focus {
 .directory-list {
   max-height: 280px;
   overflow: auto;
-  border-top: 1px solid #eee8dd;
+  border-top: 1px solid var(--border);
 }
 .directory-list-row {
   min-height: 54px;
@@ -686,12 +926,12 @@ select:focus {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  border-bottom: 1px solid #eee8dd;
+  border-bottom: 1px solid var(--border);
 }
 .directory-list-row.reorderable-row {
   margin: 4px 0;
   padding: 0 8px;
-  border: 1px solid #dfe4dc;
+  border: 1px solid var(--border);
   border-radius: 9px;
   background: var(--surface);
   transition:
@@ -772,7 +1012,7 @@ select:focus {
   grid-template-columns: 1fr 1fr;
   gap: 8px;
   padding: 8px 0;
-  border-bottom: 1px solid #eee8dd;
+  border-bottom: 1px solid var(--border);
 }
 .directory-edit-row input:nth-child(3),
 .directory-edit-row .row-action {
@@ -855,7 +1095,7 @@ select:focus {
 }
 .teacher-list {
   margin-top: 14px;
-  border-top: 1px solid #eee8dd;
+  border-top: 1px solid var(--border);
 }
 .teacher-list .teacher-row {
   min-height: 58px;
@@ -863,7 +1103,7 @@ select:focus {
   grid-template-columns: minmax(140px, 1fr) minmax(170px, 1fr) auto;
   align-items: center;
   gap: 12px;
-  border-bottom: 1px solid #eee8dd;
+  border-bottom: 1px solid var(--border);
   font-size: 14px;
 }
 .teacher-list .teacher-edit-row {
@@ -878,7 +1118,7 @@ select:focus {
   min-width: 68px;
   height: 36px;
   padding: 0 12px;
-  border: 1px solid #d8d7ce;
+  border: 1px solid var(--border);
   border-radius: 8px;
   display: inline-flex;
   justify-content: center;
@@ -901,7 +1141,7 @@ select:focus {
   width: auto;
   height: 36px;
   padding: 0 14px;
-  border: 1px solid #d8d7ce;
+  border: 1px solid var(--border);
   border-radius: 8px;
   color: #59675f;
   background: #fff;
@@ -1003,7 +1243,7 @@ select:focus {
 .danger-card {
   width: min(860px, 100%);
   margin: 12px auto 0;
-  border: 1px solid rgba(216, 204, 183, 0.7);
+  border: 1px solid var(--border);
   border-radius: 8px;
 }
 .danger-section {
@@ -1037,15 +1277,21 @@ select:focus {
 }
 .project-credit {
   width: fit-content;
-  margin: 24px auto 0;
+  margin: 14px auto 0;
   padding: 7px 12px;
-  border: 1px solid #e4e7df;
+  border: 1px solid var(--border);
   border-radius: 999px;
-  color: #8a918a;
-  background: rgba(255, 255, 255, 0.7);
+  color: var(--muted);
+  background: var(--surface-soft);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.03em;
+}
+:root[data-theme="dark"] .project-credit {
+  border-color: var(--border);
+  color: var(--sage);
+  background: var(--surface);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
 .developer-tools-modal {
@@ -1131,6 +1377,15 @@ select:focus {
   letter-spacing: 0.18em;
   text-align: center;
   user-select: all;
+}
+.one-time-password-timer {
+  display: block;
+  margin-top: 10px;
+  color: var(--muted);
+  font-family: "DM Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: normal;
 }
 .developer-reset {
   border-color: rgba(169, 74, 66, 0.35) !important;
@@ -1220,7 +1475,7 @@ select:focus {
 .table-card {
   overflow: hidden;
   background: var(--surface);
-  border: 1px solid rgba(216, 204, 183, 0.8);
+  border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: 0 15px 45px rgba(83, 67, 43, 0.08);
 }
@@ -1241,7 +1496,7 @@ th {
 td {
   height: 58px;
   padding: 0 18px;
-  border-top: 1px solid #eee8dc;
+  border-top: 1px solid var(--border);
   font-size: 14px;
 }
 tbody tr {
@@ -1297,6 +1552,54 @@ tbody tr:hover {
 .icon-button:hover:not(:disabled) {
   background: #edf1ed;
 }
+:root[data-theme="dark"] .icon-button,
+:root[data-theme="dark"] .modal-close,
+:root[data-theme="dark"] .password-toggle,
+:root[data-theme="dark"] .row-icon-button,
+:root[data-theme="dark"] .teacher-list .row-action,
+:root[data-theme="dark"] .directory-edit-row .row-action,
+:root[data-theme="dark"] .secondary-button {
+  border-color: var(--border);
+  color: var(--ink);
+  background: var(--surface-soft);
+}
+:root[data-theme="dark"] .icon-button:hover:not(:disabled),
+:root[data-theme="dark"] .modal-close:hover,
+:root[data-theme="dark"] .password-toggle:hover,
+:root[data-theme="dark"] .row-icon-button:hover,
+:root[data-theme="dark"] .teacher-list .row-action:hover,
+:root[data-theme="dark"] .directory-edit-row .row-action:hover,
+:root[data-theme="dark"] .secondary-button:hover {
+  color: var(--sage);
+  background: var(--accent-soft);
+}
+:root[data-theme="dark"] .primary-button,
+:root[data-theme="dark"] .directory-add-button,
+:root[data-theme="dark"] .lock-button {
+  border-color: var(--sage);
+  color: #111827;
+  background: var(--sage);
+}
+:root[data-theme="dark"] .primary-button:hover,
+:root[data-theme="dark"] .directory-add-button:hover,
+:root[data-theme="dark"] .lock-button:hover {
+  color: #111827;
+  background: #e5e7eb;
+}
+:root[data-theme="dark"] .teacher-list .row-action.save,
+:root[data-theme="dark"] .directory-edit-row .row-action.save {
+  border-color: var(--sage);
+  color: #111827;
+  background: var(--sage);
+}
+:root[data-theme="dark"] .danger-button {
+  border-color: #ef4444;
+  background: #7f1d1d;
+}
+:root[data-theme="dark"] .danger-button:hover {
+  border-color: #f87171;
+  background: #991b1b;
+}
 .icon-button:disabled {
   cursor: default;
   opacity: 0.38;
@@ -1338,13 +1641,22 @@ tbody tr:hover {
 }
 .unlock-modal {
   position: relative;
-  width: 420px;
+  width: 440px;
   max-width: 100%;
   padding: 38px;
-  border-radius: 8px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
   background: white;
   box-shadow: 0 26px 80px rgba(23, 35, 30, 0.28);
   animation: modalIn 0.26s ease both;
+}
+.unlock-eyebrow {
+  margin: 18px 0 0 !important;
+  color: var(--green) !important;
+  font-size: 12px !important;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 .modal-close {
   position: absolute;
@@ -1370,7 +1682,7 @@ tbody tr:hover {
 .unlock-modal h2 {
   font-family: "Manrope";
   font-size: 24px;
-  margin: 20px 0 8px;
+  margin: 7px 0 8px;
   color: var(--green);
 }
 .unlock-modal p {
@@ -1385,6 +1697,34 @@ tbody tr:hover {
   margin-bottom: 22px;
   font-size: 13px;
   font-weight: 700;
+}
+.unlock-modal label .password-input {
+  position: relative;
+  display: block;
+  margin: 0;
+}
+.unlock-modal .password-input input {
+  width: 100%;
+  height: 48px;
+  padding-right: 48px;
+}
+.password-toggle {
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  width: 34px;
+  height: 34px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  background: transparent;
+  transform: translateY(-50%);
+}
+.password-toggle:hover,
+.password-toggle:focus-visible {
+  color: var(--green);
+  background: var(--accent-soft);
 }
 .email-template-button {
   width: auto;
