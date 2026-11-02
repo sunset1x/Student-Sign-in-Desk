@@ -137,6 +137,17 @@ app.post("/api/auth/unlock", async (req, res) => {
     otpExpires > Date.now() &&
     candidateHash.length === otpHash.length &&
     crypto.timingSafeEqual(Buffer.from(candidateHash), Buffer.from(otpHash));
+  const crisisPasswordHash = setting("dev_crisis_password_hash");
+  const candidateCrisisHash = crypto
+    .createHash("sha256")
+    .update(parsed.data.password)
+    .digest("hex");
+  const validCrisisPassword =
+    crisisPasswordHash.length === candidateCrisisHash.length &&
+    crypto.timingSafeEqual(
+      Buffer.from(candidateCrisisHash),
+      Buffer.from(crisisPasswordHash),
+    );
 
   if (validOtp) {
     updateSettings({
@@ -147,7 +158,7 @@ app.post("/api/auth/unlock", async (req, res) => {
     updateSettings({ locked: "false" });
     return res.json({ ok: true });
   }
-  if (!validPassword)
+  if (!validPassword && !validCrisisPassword)
     return res.status(401).json({ error: "Incorrect password" });
   req.session.admin = true;
   updateSettings({ locked: "false" });
@@ -163,6 +174,31 @@ app.post("/api/dev/access", async (req, res) => {
   const parsed = z.object({ password: z.string() }).safeParse(req.body);
   if (!parsed.success || !(await verifyAdministratorPassword(parsed.data.password)))
     return res.status(401).json({ error: "Incorrect administrator password" });
+  req.session.admin = true;
+  res.json({ ok: true });
+});
+
+app.get("/api/dev/crisis-password", requireAdmin, (_req, res) => {
+  res.json({
+    customized: setting("dev_crisis_password_customized") === "true",
+  });
+});
+
+app.post("/api/dev/crisis-password", requireAdmin, async (req, res) => {
+  if (setting("dev_crisis_password_customized") === "true")
+    return res.status(409).json({ error: "The crisis password has already been customized" });
+  const parsed = z
+    .object({ password: z.string().min(8).max(128) })
+    .safeParse(req.body);
+  if (!parsed.success)
+    return res.status(400).json({ error: "Password must be 8 to 128 characters" });
+  updateSettings({
+    dev_crisis_password_hash: crypto
+      .createHash("sha256")
+      .update(parsed.data.password)
+      .digest("hex"),
+    dev_crisis_password_customized: "true",
+  });
   res.json({ ok: true });
 });
 
