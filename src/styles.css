@@ -1242,6 +1242,63 @@ tbody tr:hover {
   color: #767d78;
   font-size: 14px;
 }
+.dev-tools-modal {
+  width: 560px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+.dev-tools-section {
+  padding: 18px 0;
+  border-top: 1px solid #e6e8e3;
+}
+.dev-tools-section h3 {
+  margin: 0 0 14px;
+  font-family: "Manrope";
+  font-size: 16px;
+}
+.dev-tools-section form > label {
+  margin-bottom: 14px;
+}
+.dev-tools-section .primary-button,
+.dev-tools-section .danger-button {
+  width: 100%;
+}
+.temporary-password-result {
+  display: grid;
+  gap: 4px;
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 6px;
+  background: var(--accent-soft);
+  text-align: center;
+}
+.temporary-password-result strong {
+  font-size: 28px;
+  letter-spacing: 0.16em;
+  color: var(--green);
+}
+.temporary-password-result small {
+  color: var(--muted);
+}
+.dev-theme-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.dev-theme-list .theme-option {
+  min-height: 46px;
+  justify-content: center;
+  padding: 10px;
+}
+.dev-tools-danger {
+  border-bottom: 1px solid #e6e8e3;
+}
+.dev-tools-error {
+  margin-top: 14px;
+}
+.dev-project-credit {
+  margin-top: 18px;
+}
 .unlock-modal label {
   display: flex;
   flex-direction: column;

@@ -107,6 +107,7 @@ export default function App() {
   const [emailTemplateOpen, setEmailTemplateOpen] = useState(false);
   const [logsRefreshing, setLogsRefreshing] = useState(false);
   const [startupGuideOpen, setStartupGuideOpen] = useState(false);
+  const [devToolsOpen, setDevToolsOpen] = useState(false);
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = window.localStorage.getItem("skully-theme");
     return saved === "slate" || saved === "sunset" ? saved : "forest";
@@ -161,6 +162,11 @@ export default function App() {
         else setModal(false);
         return;
       }
+      if (event.key === "F10") {
+        event.preventDefault();
+        setDevToolsOpen(true);
+        return;
+      }
 
       const target = event.target as HTMLElement;
       const isTyping = target.matches(
@@ -199,10 +205,17 @@ export default function App() {
   const unlock = async (event: FormEvent) => {
     event.preventDefault();
     try {
-      await api("/auth/unlock", {
-        method: "POST",
-        body: JSON.stringify({ password }),
-      });
+      try {
+        await api("/auth/unlock", {
+          method: "POST",
+          body: JSON.stringify({ password }),
+        });
+      } catch {
+        await api("/auth/temporary", {
+          method: "POST",
+          body: JSON.stringify({ password }),
+        });
+      }
       setPassword("");
       setModal(false);
       setLocked(false);
@@ -350,6 +363,27 @@ export default function App() {
             <RefreshCw size={22} />
           </div>
         </div>
+      )}
+      {devToolsOpen && (
+        <DevToolsModal
+          theme={theme}
+          setTheme={setTheme}
+          onReset={async (password) => {
+            await api("/reset", {
+              method: "POST",
+              body: JSON.stringify({ password }),
+            });
+            window.localStorage.removeItem("skully-theme");
+            setTheme("forest");
+            setLocked(true);
+            setPage("sign-in");
+            await refreshStatus();
+            setDevToolsOpen(false);
+            setNotice("All kiosk data was reset");
+          }}
+          onClose={() => setDevToolsOpen(false)}
+          onNotice={setNotice}
+        />
       )}
       {modal && (
         <UnlockModal
@@ -1927,6 +1961,167 @@ function SettingsHeading({
       >
         <CircleHelp size={18} />
       </button>
+    </div>
+  );
+}
+
+function DevToolsModal({
+  theme,
+  setTheme,
+  onReset,
+  onClose,
+  onNotice,
+}: {
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
+  onReset: (password: string) => Promise<void>;
+  onClose: () => void;
+  onNotice: (message: string) => void;
+}) {
+  const [password, setPassword] = useState("");
+  const [resetPassword, setResetPassword] = useState("");
+  const [temporaryPassword, setTemporaryPassword] = useState("");
+  const [error, setError] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const backdrop = useBackdropDismiss(onClose);
+
+  const generate = async (event: FormEvent) => {
+    event.preventDefault();
+    setError("");
+    setGenerating(true);
+    try {
+      const result = await api("/dev/temporary-password", {
+        method: "POST",
+        body: JSON.stringify({ password }),
+      });
+      setTemporaryPassword(result.password);
+      setPassword("");
+      onNotice("One-time password generated for 15 minutes");
+    } catch (caught) {
+      setError((caught as Error).message);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const reset = async (event: FormEvent) => {
+    event.preventDefault();
+    setError("");
+    setResetting(true);
+    try {
+      await onReset(resetPassword);
+    } catch (caught) {
+      setError((caught as Error).message);
+      setResetting(false);
+    }
+  };
+
+  return (
+    <div className="modal-backdrop" role="presentation" {...backdrop}>
+      <section
+        className="unlock-modal dev-tools-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dev-tools-title"
+      >
+        <button
+          type="button"
+          className="modal-close"
+          aria-label="Close"
+          onClick={onClose}
+        >
+          <X size={19} />
+        </button>
+        <div className="modal-icon">
+          <SlidersHorizontal size={24} />
+        </div>
+        <h2 id="dev-tools-title">Developer tools</h2>
+        <p>Temporary administrator access and kiosk recovery tools.</p>
+
+        <div className="dev-tools-section">
+          <h3>One-time password</h3>
+          <form onSubmit={generate}>
+            <label>
+              <span>Actual administrator password</span>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+            </label>
+            <button className="primary-button" type="submit" disabled={generating}>
+              {generating ? "Generating..." : "Generate one-time password"}
+            </button>
+          </form>
+          {temporaryPassword && (
+            <div className="temporary-password-result">
+              <span>Use at the administrator unlock screen</span>
+              <strong>{temporaryPassword}</strong>
+              <small>Valid once for 15 minutes</small>
+            </div>
+          )}
+        </div>
+
+        <div className="dev-tools-section">
+          <h3>Theme</h3>
+          <div className="dev-theme-list">
+            {(["forest", "slate", "sunset"] as Theme[]).map((value) => (
+              <button
+                key={value}
+                type="button"
+                className={`theme-option theme-${value} ${theme === value ? "selected" : ""}`}
+                aria-pressed={theme === value}
+                onClick={() => setTheme(value)}
+              >
+                {value[0].toUpperCase() + value.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="dev-tools-section dev-tools-danger">
+          <h3>Total data reset</h3>
+          {!confirmReset ? (
+            <button
+              className="danger-button"
+              type="button"
+              onClick={() => setConfirmReset(true)}
+            >
+              Reset all kiosk data
+            </button>
+          ) : (
+            <form onSubmit={reset}>
+              <label>
+                <span>Actual administrator password</span>
+                <input
+                  autoFocus
+                  type="password"
+                  required
+                  value={resetPassword}
+                  onChange={(event) => setResetPassword(event.target.value)}
+                />
+              </label>
+              <div className="modal-actions">
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => setConfirmReset(false)}
+                >
+                  Cancel
+                </button>
+                <button className="danger-button" type="submit" disabled={resetting}>
+                  {resetting ? "Resetting..." : "Permanently reset"}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+        {error && <div className="form-error dev-tools-error">{error}</div>}
+        <div className="project-credit dev-project-credit">A Skully Project</div>
+      </section>
     </div>
   );
 }

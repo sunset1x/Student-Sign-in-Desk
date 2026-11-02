@@ -7,6 +7,7 @@ import nodemailer from "nodemailer";
 import { z } from "zod";
 import path from "node:path";
 import fs from "node:fs";
+import crypto from "node:crypto";
 import connectSqlite3 from "connect-sqlite3";
 import { db, setting, updateSettings } from "./database.js";
 
@@ -130,6 +131,54 @@ app.post("/api/auth/unlock", async (req, res) => {
   req.session.admin = true;
   updateSettings({ locked: "false" });
   res.json({ ok: true });
+});
+
+app.post("/api/auth/temporary", async (req, res) => {
+  const schema = z.object({ password: z.string() });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success)
+    return res.status(400).json({ error: "Password is required" });
+
+  const temporaryHash = setting("temporary_password_hash");
+  const expiresAt = Number(setting("temporary_password_expires") || 0);
+  if (!temporaryHash || expiresAt <= Date.now()) {
+    updateSettings({
+      temporary_password_hash: "",
+      temporary_password_expires: "",
+    });
+    return res.status(401).json({ error: "One-time password is invalid or expired" });
+  }
+  if (!(await bcrypt.compare(parsed.data.password, temporaryHash))) {
+    return res.status(401).json({ error: "One-time password is invalid or expired" });
+  }
+
+  updateSettings({
+    temporary_password_hash: "",
+    temporary_password_expires: "",
+    locked: "false",
+  });
+  req.session.admin = true;
+  res.json({ ok: true });
+});
+
+app.post("/api/dev/temporary-password", async (req, res) => {
+  const schema = z.object({ password: z.string() });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success)
+    return res.status(400).json({ error: "Administrator password is required" });
+
+  const hash = setting("admin_password_hash");
+  if (!hash)
+    return res.status(409).json({ error: "Create an administrator password first" });
+  if (!(await bcrypt.compare(parsed.data.password, hash)))
+    return res.status(401).json({ error: "Administrator password is incorrect" });
+
+  const password = crypto.randomBytes(6).toString("base64url").slice(0, 8).toUpperCase();
+  updateSettings({
+    temporary_password_hash: await bcrypt.hash(password, 12),
+    temporary_password_expires: String(Date.now() + 15 * 60 * 1000),
+  });
+  res.json({ password, expiresMinutes: 15 });
 });
 app.post("/api/auth/logout", (req, res) =>
   req.session.destroy(() => res.json({ ok: true })),
