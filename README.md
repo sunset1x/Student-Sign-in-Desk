@@ -43,6 +43,68 @@ npm start
 
 Open `http://localhost:3000`. Set a strong `SESSION_SECRET`, configure `DATABASE_PATH`, and serve the site behind HTTPS. The Express process stores administrator sessions in SQLite.
 
+## Deploy the frontend with GitHub Pages Actions
+
+GitHub Pages can publish the React interface, but it cannot run the Express API, SQLite database, administrator sessions, or email delivery. The published static page is therefore a frontend preview; backend features require a Node.js host for the Express server and a persistent database.
+
+1. Push the project to the repository's `main` branch.
+2. In GitHub, open **Settings → Pages**.
+3. Under **Build and deployment**, select **GitHub Actions**.
+4. Add `.github/workflows/deploy-pages.yml` with this workflow:
+
+```yaml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build -- --base=/${{ github.event.repository.name }}/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+Commit and push the workflow. Open the repository's **Actions** tab, wait for **Deploy to GitHub Pages** to finish, then use the published URL shown there or under **Settings → Pages**.
+
+If the repository is configured for a username-level `owner.github.io` site instead of a project site, change the build command to:
+
+```bash
+npm run build -- --base=/
+```
+
 ## Docker deployment
 
 ```bash
