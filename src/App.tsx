@@ -103,6 +103,7 @@ export default function App() {
   const [settings, setSettings] = useState<Record<string, string>>({});
   const [reasons, setReasons] = useState<string[]>([]);
   const [managementOpen, setManagementOpen] = useState(false);
+  const [emailTemplateOpen, setEmailTemplateOpen] = useState(false);
   const [logsRefreshing, setLogsRefreshing] = useState(false);
   const [startupGuideOpen, setStartupGuideOpen] = useState(false);
   const [theme, setTheme] = useState<Theme>(() => {
@@ -294,6 +295,7 @@ export default function App() {
           refreshTeachers={refreshTeachers}
           refreshSettings={refreshSettings}
           setManagementOpen={setManagementOpen}
+          setEmailTemplateOpen={setEmailTemplateOpen}
           theme={theme}
           setTheme={setTheme}
           onNotice={setNotice}
@@ -320,6 +322,25 @@ export default function App() {
           refreshStatus={refreshStatus}
           onNotice={setNotice}
           onClose={() => setManagementOpen(false)}
+        />
+      )}
+      {emailTemplateOpen && (
+        <EmailTemplateModal
+          subject={settings.notification_email_subject || ""}
+          message={settings.notification_email_message || ""}
+          onSave={async (subject, message) => {
+            await api("/settings", {
+              method: "PUT",
+              body: JSON.stringify({
+                notification_email_subject: subject,
+                notification_email_message: message,
+              }),
+            });
+            await refreshSettings();
+            setEmailTemplateOpen(false);
+            setNotice("Email message updated");
+          }}
+          onClose={() => setEmailTemplateOpen(false)}
         />
       )}
       {logsRefreshing && (
@@ -747,6 +768,7 @@ function SettingsPage({
   refreshTeachers,
   refreshSettings,
   setManagementOpen,
+  setEmailTemplateOpen,
   theme,
   setTheme,
   onNotice,
@@ -759,6 +781,7 @@ function SettingsPage({
   refreshTeachers: () => Promise<void>;
   refreshSettings: () => Promise<void>;
   setManagementOpen: (open: boolean) => void;
+  setEmailTemplateOpen: (open: boolean) => void;
   theme: Theme;
   setTheme: (theme: Theme) => void;
   onNotice: (message: string) => void;
@@ -784,7 +807,6 @@ function SettingsPage({
   );
   const [savingSettings, setSavingSettings] = useState(false);
   const [savingTeacherId, setSavingTeacherId] = useState<number | null>(null);
-  const [emailTemplateOpen, setEmailTemplateOpen] = useState(false);
   const save = async () => {
     if (savingSettings) return;
     setSavingSettings(true);
@@ -1213,14 +1235,6 @@ function SettingsPage({
                   </p>
                 </div>
               )}
-              <button
-                className="secondary-button email-template-button"
-                type="button"
-                onClick={() => setEmailTemplateOpen(true)}
-              >
-                <PencilLine size={17} />
-                Edit email message
-              </button>
               <div className="field-grid">
                 <TextSetting
                   draft={draft}
@@ -1260,6 +1274,14 @@ function SettingsPage({
                   password
                 />
               </div>
+              <button
+                className="secondary-button email-template-button"
+                type="button"
+                onClick={() => setEmailTemplateOpen(true)}
+              >
+                <PencilLine size={17} />
+                <span>Edit email message</span>
+              </button>
             </section>
             <section>
               <SettingsHeading
@@ -1352,30 +1374,6 @@ function SettingsPage({
           </>
         )}
       </div>
-      {emailTemplateOpen && (
-        <EmailTemplateModal
-          subject={draft.notification_email_subject || ""}
-          message={draft.notification_email_message || ""}
-          onSave={async (subject, message) => {
-            await api("/settings", {
-              method: "PUT",
-              body: JSON.stringify({
-                notification_email_subject: subject,
-                notification_email_message: message,
-              }),
-            });
-            setDraft((current) => ({
-              ...current,
-              notification_email_subject: subject,
-              notification_email_message: message,
-            }));
-            await refreshSettings();
-            setEmailTemplateOpen(false);
-            onNotice("Email message updated");
-          }}
-          onClose={() => setEmailTemplateOpen(false)}
-        />
-      )}
       {passwordConfigured && (
         <div className="danger-section danger-card">
           <div>

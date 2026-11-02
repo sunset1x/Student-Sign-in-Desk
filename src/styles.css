@@ -1251,7 +1251,17 @@ tbody tr:hover {
   font-weight: 700;
 }
 .email-template-button {
-  margin-bottom: 18px;
+  width: auto;
+  margin-top: 18px;
+  margin-bottom: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  line-height: 1;
+}
+.email-template-button svg {
+  flex: 0 0 auto;
 }
 .email-template-modal {
   width: 620px;
