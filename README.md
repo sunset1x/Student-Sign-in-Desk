@@ -1,1 +1,67 @@
-# Student-Sign-in-Desk
+# Scopely Visitor Sign-In System
+
+A touch-screen visitor kiosk for school offices, with administrator settings, teacher management, sign-in logs, SQLite storage, session authentication, and optional email notifications.
+
+## Folder structure
+
+```text
+.
+├── src/                  React kiosk interface
+├── server/               Express API, session, database, and email integration
+├── database/schema.sql   Portable SQLite schema
+├── database/seed.sql     Default application settings
+├── Dockerfile
+├── docker-compose.yml
+├── .env.example
+└── vite.config.ts
+```
+
+## Install and run locally
+
+Requirements: Node.js 20+ and npm.
+
+```bash
+npm install
+cp .env.example .env
+npm run dev
+```
+
+Open `http://localhost:5173`. The API runs on `http://localhost:3000`.
+
+On the first launch, press `Esc`, then create an administrator password of at least 8 characters. The kiosk starts locked. Use `Esc` from the sign-in screen to unlock it.
+
+In `Settings`, add teachers before accepting public sign-ins. Configure SMTP for automatic notifications, or leave SMTP values empty to record email status as `not_sent`.
+
+## Production build
+
+```bash
+npm run build
+npm start
+```
+
+Open `http://localhost:3000`. Set a strong `SESSION_SECRET`, configure `DATABASE_PATH`, and serve the site behind HTTPS. The Express process stores administrator sessions in SQLite.
+
+## Docker deployment
+
+```bash
+SESSION_SECRET="$(openssl rand -hex 32)" docker compose up --build -d
+```
+
+The application is available at `http://localhost:3000`. Database data persists in the `scopely-data` Docker volume.
+
+## Environment variables
+
+Copy `.env.example` to `.env`. `SESSION_SECRET` is required for every production deployment. `DATABASE_PATH` should point to a writable location. SMTP settings are optional; when notification email and SMTP host are set, each sign-in is emailed and its delivery status is recorded in the log.
+
+## Database
+
+The server creates and migrates its SQLite database automatically. The schema and seed SQL are also provided in `database/schema.sql` and `database/seed.sql` for inspection or manual installation.
+
+## Security
+
+- Passwords use bcrypt with cost 12.
+- Administrator routes require an authenticated server-side session.
+- HTTP cookies are HTTP-only, SameSite strict, and secure in production.
+- Helmet security headers and JSON size limits are enabled.
+- All user-controlled values are validated by Zod.
+- The SQLite database and Docker volume should receive regular backups.

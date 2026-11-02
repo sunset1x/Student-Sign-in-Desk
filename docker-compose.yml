@@ -1,0 +1,24 @@
+services:
+  scopely:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      SESSION_SECRET: ${SESSION_SECRET:-replace-with-a-long-random-value}
+      SECURE_COOKIES: ${SECURE_COOKIES:-false}
+      DATABASE_PATH: /app/data/scopely.sqlite
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      MAIL_FROM: ${MAIL_FROM:-Scopely <kiosk@example.edu>}
+      NOTIFICATION_EMAIL: ${NOTIFICATION_EMAIL:-}
+    volumes:
+      - scopely-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  scopely-data:
