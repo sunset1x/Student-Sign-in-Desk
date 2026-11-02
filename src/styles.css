@@ -598,15 +598,6 @@ select:focus {
   color: #92958f;
   font-size: 12px;
 }
-.sign-in-unlock-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 600px;
-  max-width: 100%;
-  margin: 16px auto 0;
-}
 .settings-page,
 .logs-page {
   padding: 42px 0 70px;

@@ -230,12 +230,6 @@ app.post("/api/lock", (req, res) => {
   res.json({ ok: true });
 });
 
-app.post("/api/unlock", (req, res) => {
-  updateSettings({ locked: "false" });
-  req.session.admin = true;
-  res.json({ ok: true });
-});
-
 app.get("/api/teachers", (_req, res) => {
   const rows = db
     .prepare(
