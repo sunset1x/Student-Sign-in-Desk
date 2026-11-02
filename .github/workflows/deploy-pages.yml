@@ -30,7 +30,11 @@ jobs:
       - name: Build static frontend
         env:
           VITE_API_URL: ${{ vars.SKULLY_API_URL }}
-        run: npm run build -- --base="/${{ github.event.repository.name }}/"
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+        run: npm run build
+
+      - name: Add GitHub Pages SPA fallback
+        run: cp dist/index.html dist/404.html
 
       - uses: actions/configure-pages@v5
 
