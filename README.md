@@ -1,4 +1,4 @@
-# Scopely Visitor Sign-In System
+# Skully Visitor Sign-In System
 
 A touch-screen visitor kiosk for school offices, with administrator settings, teacher management, sign-in logs, SQLite storage, session authentication, and optional email notifications.
 
@@ -30,7 +30,9 @@ Open `http://localhost:5173`. The API runs on `http://localhost:3000`.
 
 On the first launch, press `Esc`, then create an administrator password of at least 8 characters. The kiosk starts locked. Use `Esc` from the sign-in screen to unlock it.
 
-In `Settings`, add teachers before accepting public sign-ins. Configure SMTP for automatic notifications, or leave SMTP values empty to record email status as `not_sent`.
+In `Settings`, use **Teachers and visit reasons** before accepting public sign-ins. The management popup allows administrators to add, edit, remove, and reorder teachers and visit reasons. Configure SMTP for automatic notifications, or leave SMTP values empty to record email status as `not_sent`.
+
+Settings, unlock, reset, and management popups can be closed with their close button or by clicking outside the popup.
 
 ## Production build
 

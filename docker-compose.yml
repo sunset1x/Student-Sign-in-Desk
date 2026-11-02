@@ -14,7 +14,7 @@ services:
       SMTP_SECURE: ${SMTP_SECURE:-false}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
-      MAIL_FROM: ${MAIL_FROM:-Scopely <kiosk@example.edu>}
+      MAIL_FROM: ${MAIL_FROM:-Skully <kiosk@example.edu>}
       NOTIFICATION_EMAIL: ${NOTIFICATION_EMAIL:-}
     volumes:
       - scopely-data:/app/data

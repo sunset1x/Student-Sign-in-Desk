@@ -1,2 +1,2 @@
 import './database.js';
-console.log('Scopely database initialized successfully.');
+console.log('Skully database initialized successfully.');
