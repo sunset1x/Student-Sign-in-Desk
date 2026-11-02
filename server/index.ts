@@ -13,6 +13,25 @@ import { db, setting, updateSettings } from "./database.js";
 const app = express();
 const port = Number(process.env.PORT || 3000);
 const SQLiteStore = connectSqlite3(session);
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Vary", "Origin");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+  }
+  if (req.method === "OPTIONS" && origin && allowedOrigins.includes(origin)) {
+    return res.sendStatus(204);
+  }
+  next();
+});
 app.use(
   helmet({
     contentSecurityPolicy:
@@ -31,7 +50,7 @@ app.use(
     cookie: {
       secure: process.env.SECURE_COOKIES === "true",
       httpOnly: true,
-      sameSite: "strict",
+      sameSite: process.env.SECURE_COOKIES === "true" ? "none" : "strict",
       maxAge: 8 * 60 * 60 * 1000,
     },
   }),

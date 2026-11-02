@@ -50,7 +50,7 @@ GitHub Pages cannot run the Express API or SQLite database. For the complete wor
 The included `.github/workflows/deploy-pages.yml` workflow deploys the frontend automatically whenever `main` is updated.
 
 1. Deploy the Express server to a Node.js host such as Render, Railway, or Fly.io with a persistent writable disk for SQLite.
-2. Enable HTTPS and CORS for the Pages origin on the Express host.
+2. Enable HTTPS and CORS for the Pages origin on the Express host. Set `SECURE_COOKIES=true` and `ALLOWED_ORIGINS=https://your-account.github.io` to the exact Pages origin.
 3. In the GitHub repository, open **Settings → Pages** and select **GitHub Actions**.
 4. Open **Settings → Secrets and variables → Actions → Variables** and add:
    - Variable name: `SKULLY_API_URL`
