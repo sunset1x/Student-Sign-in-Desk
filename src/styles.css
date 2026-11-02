@@ -1250,6 +1250,41 @@ tbody tr:hover {
   font-size: 13px;
   font-weight: 700;
 }
+.email-template-button {
+  margin-bottom: 18px;
+}
+.email-template-modal {
+  width: 620px;
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+}
+.email-template-modal textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px;
+  background: var(--surface);
+  color: var(--ink);
+}
+.email-command-list {
+  margin: -4px 0 22px;
+  font-size: 13px;
+}
+.email-command-list > div {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.email-command-list button {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--green);
+  background: var(--surface-soft);
+  font-size: 12px;
+}
 .startup-backdrop {
   z-index: 50;
 }

@@ -53,6 +53,9 @@ const defaults: Record<string, string> = {
   smtp_pass: process.env.SMTP_PASS || "",
   mail_from: process.env.MAIL_FROM || "Skully <kiosk@example.edu>",
   notification_email: process.env.NOTIFICATION_EMAIL || "",
+  notification_email_subject: "Visitor sign-in: @visitorName",
+  notification_email_message:
+    "Hello @teacher,\n\n@visitorName has arrived for a visit.\n\nReason: @reason\nOffice: @office\nSchool: @school\nSigned in: @dateTime",
   visit_reasons: JSON.stringify([
     "Class visit",
     "Meeting",

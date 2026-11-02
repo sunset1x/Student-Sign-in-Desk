@@ -227,6 +227,13 @@ function escapeHtml(value: string) {
   );
 }
 
+function fillEmailTemplate(template: string, values: Record<string, string>) {
+  return template.replace(/@[a-zA-Z0-9_]+/g, (command) => {
+    const key = command.slice(1);
+    return values[key] ?? command;
+  });
+}
+
 async function sendNotification(signIn: {
   firstName: string;
   lastName: string;
@@ -250,12 +257,32 @@ async function sendNotification(signIn: {
   const reason = escapeHtml(signIn.reason);
   const safeSchoolName = escapeHtml(schoolName);
   const safeOfficeName = escapeHtml(officeName);
+  const templateValues = {
+    visitor: `${signIn.firstName} ${signIn.lastName}`,
+    visitorName: `${signIn.firstName} ${signIn.lastName}`,
+    visitorFirstName: signIn.firstName,
+    visitorLastName: signIn.lastName,
+    teacher: signIn.teacherName,
+    reason: signIn.reason,
+    school: schoolName,
+    office: officeName,
+    date: new Date().toLocaleDateString(),
+    time: new Date().toLocaleTimeString(),
+    dateTime: signedInAt,
+  };
+  const subjectTemplate =
+    setting("notification_email_subject") || "Visitor sign-in: @visitorName";
+  const messageTemplate =
+    setting("notification_email_message") ||
+    "Hello @teacher,\n\n@visitorName has arrived for a visit.\n\nReason: @reason\nOffice: @office\nSchool: @school\nSigned in: @dateTime";
+  const customText = fillEmailTemplate(messageTemplate, templateValues);
+  const customHtml = escapeHtml(customText).replace(/\r?\n/g, "<br>");
   await transporter.sendMail({
     from: setting("mail_from"),
     to: setting("notification_email"),
-    subject: `Visitor sign-in: ${signIn.firstName} ${signIn.lastName}`,
-    text: `${schoolName}\n${officeName}\n\nVisitor: ${signIn.firstName} ${signIn.lastName}\nTeacher: ${signIn.teacherName}\nReason: ${signIn.reason}\nSigned in: ${signedInAt}`,
-    html: `<div style="font-family:Arial,sans-serif;color:#18352a;line-height:1.5"><h2 style="color:#0c4b37;margin-bottom:4px">New visitor sign-in</h2><p style="margin-top:0;color:#66736c">${safeSchoolName} · ${safeOfficeName}</p><table style="border-collapse:collapse;margin-top:18px"><tr><td style="padding:6px 18px 6px 0;font-weight:bold">Visitor</td><td>${visitorName}</td></tr><tr><td style="padding:6px 18px 6px 0;font-weight:bold">Teacher</td><td>${teacherName}</td></tr><tr><td style="padding:6px 18px 6px 0;font-weight:bold">Reason</td><td>${reason}</td></tr><tr><td style="padding:6px 18px 6px 0;font-weight:bold">Signed in</td><td>${escapeHtml(signedInAt)}</td></tr></table></div>`,
+    subject: fillEmailTemplate(subjectTemplate, templateValues),
+    text: customText,
+    html: `<div style="font-family:Arial,sans-serif;color:#18352a;line-height:1.5"><h2 style="color:#0c4b37;margin-bottom:4px">New visitor sign-in</h2><p style="margin-top:0;color:#66736c">${safeSchoolName} · ${safeOfficeName}</p><p>${customHtml}</p></div>`,
   });
   return true;
 }
@@ -346,6 +373,8 @@ app.put("/api/settings", requireAdmin, (req, res) => {
     "smtp_pass",
     "mail_from",
     "notification_email",
+    "notification_email_subject",
+    "notification_email_message",
     "visit_reasons",
   ];
   const values = Object.fromEntries(
@@ -410,6 +439,9 @@ app.post("/api/reset", requireAdmin, async (req, res) => {
       smtp_pass: "",
       mail_from: "Skully <kiosk@example.edu>",
       notification_email: "",
+      notification_email_subject: "Visitor sign-in: @visitorName",
+      notification_email_message:
+        "Hello @teacher,\n\n@visitorName has arrived for a visit.\n\nReason: @reason\nOffice: @office\nSchool: @school\nSigned in: @dateTime",
     };
     const insert = db.prepare(
       "INSERT INTO settings (key, value) VALUES (?, ?)",

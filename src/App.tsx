@@ -484,6 +484,116 @@ function StartupGuide({
   );
 }
 
+function EmailTemplateModal({
+  subject,
+  message,
+  onSave,
+  onClose,
+}: {
+  subject: string;
+  message: string;
+  onSave: (subject: string, message: string) => Promise<void>;
+  onClose: () => void;
+}) {
+  const [subjectDraft, setSubjectDraft] = useState(
+    subject || "Visitor sign-in: @visitorName",
+  );
+  const [messageDraft, setMessageDraft] = useState(
+    message ||
+      "Hello @teacher,\n\n@visitorName has arrived for a visit.\n\nReason: @reason\nOffice: @office\nSchool: @school\nSigned in: @dateTime",
+  );
+  const [saving, setSaving] = useState(false);
+  const backdrop = useBackdropDismiss(onClose);
+  const commands = [
+    ["@visitorName", "Visitor full name"],
+    ["@visitorFirstName", "Visitor first name"],
+    ["@visitorLastName", "Visitor last name"],
+    ["@teacher", "Teacher name"],
+    ["@reason", "Visit reason"],
+    ["@school", "School name"],
+    ["@office", "Office name"],
+    ["@date", "Current date"],
+    ["@time", "Current time"],
+    ["@dateTime", "Date and time"],
+  ];
+
+  return (
+    <div className="modal-backdrop" role="presentation" {...backdrop}>
+      <form
+        className="unlock-modal email-template-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="email-template-title"
+        onSubmit={async (event) => {
+          event.preventDefault();
+          setSaving(true);
+          try {
+            await onSave(subjectDraft, messageDraft);
+          } finally {
+            setSaving(false);
+          }
+        }}
+      >
+        <button
+          type="button"
+          className="modal-close"
+          aria-label="Close"
+          onClick={onClose}
+        >
+          <X size={19} />
+        </button>
+        <div className="modal-icon">
+          <PencilLine size={24} />
+        </div>
+        <h2 id="email-template-title">Custom email message</h2>
+        <p>Customize the notification sent when a visitor signs in.</p>
+        <label>
+          <span>Subject</span>
+          <input
+            required
+            value={subjectDraft}
+            onChange={(event) => setSubjectDraft(event.target.value)}
+          />
+        </label>
+        <label>
+          <span>Message</span>
+          <textarea
+            required
+            rows={7}
+            value={messageDraft}
+            onChange={(event) => setMessageDraft(event.target.value)}
+          />
+        </label>
+        <div className="email-command-list">
+          <strong>Available commands</strong>
+          <div>
+            {commands.map(([command, description]) => (
+              <button
+                key={command}
+                type="button"
+                onClick={() =>
+                  setMessageDraft((current) => `${current}${command}`)
+                }
+                title={description}
+              >
+                {command}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="modal-actions">
+          <button type="button" className="secondary-button" onClick={onClose}>
+            Cancel
+          </button>
+          <button type="submit" className="primary-button" disabled={saving}>
+            {saving ? "Saving..." : "Save message"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 function Logo() {
   return (
     <div className="brand">
@@ -525,6 +635,7 @@ function SignInPage({
         body: JSON.stringify({ firstName, lastName, teacherId, reason }),
       });
       setComplete(true);
+      onNotice("Sign-in successful");
       setFirstName("");
       setLastName("");
       setTeacherId("");
@@ -673,6 +784,7 @@ function SettingsPage({
   );
   const [savingSettings, setSavingSettings] = useState(false);
   const [savingTeacherId, setSavingTeacherId] = useState<number | null>(null);
+  const [emailTemplateOpen, setEmailTemplateOpen] = useState(false);
   const save = async () => {
     if (savingSettings) return;
     setSavingSettings(true);
@@ -1101,6 +1213,14 @@ function SettingsPage({
                   </p>
                 </div>
               )}
+              <button
+                className="secondary-button email-template-button"
+                type="button"
+                onClick={() => setEmailTemplateOpen(true)}
+              >
+                <PencilLine size={17} />
+                Edit email message
+              </button>
               <div className="field-grid">
                 <TextSetting
                   draft={draft}
@@ -1232,6 +1352,30 @@ function SettingsPage({
           </>
         )}
       </div>
+      {emailTemplateOpen && (
+        <EmailTemplateModal
+          subject={draft.notification_email_subject || ""}
+          message={draft.notification_email_message || ""}
+          onSave={async (subject, message) => {
+            await api("/settings", {
+              method: "PUT",
+              body: JSON.stringify({
+                notification_email_subject: subject,
+                notification_email_message: message,
+              }),
+            });
+            setDraft((current) => ({
+              ...current,
+              notification_email_subject: subject,
+              notification_email_message: message,
+            }));
+            await refreshSettings();
+            setEmailTemplateOpen(false);
+            onNotice("Email message updated");
+          }}
+          onClose={() => setEmailTemplateOpen(false)}
+        />
+      )}
       {passwordConfigured && (
         <div className="danger-section danger-card">
           <div>
