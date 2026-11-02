@@ -226,6 +226,17 @@ export default function App() {
       setNotice((error as Error).message);
     }
   };
+  const publicUnlock = async () => {
+    try {
+      await api("/unlock", { method: "POST" });
+      setLocked(false);
+      await refreshStatus();
+      await refreshTeachers();
+      setNotice("Kiosk unlocked");
+    } catch (error) {
+      setNotice((error as Error).message);
+    }
+  };
   const lock = async () => {
     if (!passwordConfigured) {
       setNotice("Create a password first");
@@ -303,6 +314,7 @@ export default function App() {
           reasons={reasons}
           refreshTeachers={refreshTeachers}
           locked={locked}
+          onUnlock={publicUnlock}
           onNotice={setNotice}
         />
       )}
@@ -664,12 +676,14 @@ function SignInPage({
   reasons,
   onNotice,
   locked,
+  onUnlock,
 }: {
   schoolName: string;
   teachers: Teacher[];
   reasons: string[];
   refreshTeachers: () => void;
   locked: boolean;
+  onUnlock: () => void;
   onNotice: (message: string) => void;
 }) {
   const [firstName, setFirstName] = useState("");
@@ -760,6 +774,15 @@ function SignInPage({
           </div>
         )}
       </form>
+      {locked && (
+        <button
+          className="sign-in-unlock-button secondary-button"
+          type="button"
+          onClick={onUnlock}
+        >
+          <LockKeyhole size={17} /> Unlock kiosk
+        </button>
+      )}
     </main>
   );
 }
