@@ -113,6 +113,83 @@ SESSION_SECRET="$(openssl rand -hex 32)" docker compose up --build -d
 
 The application is available at `http://localhost:3000`. Database data persists in the `scopely-data` Docker volume.
 
+## GitHub Pages deployment with GitHub Actions
+
+GitHub Pages can publish the React interface, but it cannot run this project's Express server, SQLite database, sessions, or email delivery. Use GitHub Pages only for a frontend-only preview, or deploy the full Express application to a Node.js host separately.
+
+To publish a frontend preview from a project repository:
+
+1. Open the repository on GitHub and select **Settings > Pages**.
+2. Under **Build and deployment**, set **Source** to **GitHub Actions**.
+3. Add a `.github/workflows/pages.yml` file with this workflow:
+
+```yaml
+name: Deploy React frontend to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload frontend
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+4. Commit the workflow and push to `main`. GitHub Actions will build the `dist` directory and deploy it.
+5. Open the deployment URL shown under **Settings > Pages** or by opening the latest **Deploy React frontend to GitHub Pages** workflow run.
+
+If the repository is `username/Student-Sign-in-Desk`, the project Pages URL is normally:
+
+```text
+https://username.github.io/Student-Sign-in-Desk/
+```
+
+For the complete visitor-sign-in system, publish the Express server on a Node.js host and point its frontend to that host's API. GitHub Pages alone does not provide server-side authentication, database storage, SMTP delivery, or persistent settings.
+
 ## Environment variables
 
 Copy `.env.example` to `.env`. `SESSION_SECRET` is required for every production deployment. `DATABASE_PATH` should point to a writable location. SMTP settings are optional; when notification email and SMTP host are set, each sign-in is emailed and its delivery status is recorded in the log.
