@@ -1,7 +1,6 @@
 import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
-import crypto from "node:crypto";
 
 const databasePath = process.env.DATABASE_PATH || "./data/scopely.sqlite";
 fs.mkdirSync(path.dirname(databasePath), { recursive: true });
@@ -65,11 +64,6 @@ const defaults: Record<string, string> = {
     "Other",
   ]),
   locked: "true",
-  dev_crisis_password_hash: crypto
-    .createHash("sha256")
-    .update("abortmisson1")
-    .digest("hex"),
-  dev_crisis_password_customized: "false",
 };
 const insertSetting = db.prepare(
   "INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",

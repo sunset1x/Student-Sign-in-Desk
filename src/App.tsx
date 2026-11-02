@@ -61,7 +61,7 @@ function useBackdropDismiss(onDismiss: () => void) {
 }
 
 type Page = "sign-in" | "settings" | "logs";
-type Theme = "forest" | "black-glass" | "glass";
+type Theme = "forest" | "slate" | "sunset";
 type Teacher = {
   id: number;
   first_name: string;
@@ -110,9 +110,7 @@ export default function App() {
   const [devToolsOpen, setDevToolsOpen] = useState(false);
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = window.localStorage.getItem("skully-theme");
-    if (saved === "black-glass" || saved === "slate") return "black-glass";
-    if (saved === "glass" || saved === "sunset") return "glass";
-    return "forest";
+    return saved === "slate" || saved === "sunset" ? saved : "forest";
   });
 
   useEffect(() => {
@@ -486,7 +484,7 @@ function StartupGuide({
         </label>
         <fieldset className="startup-theme-selector">
           <legend>Theme</legend>
-          {(["forest", "black-glass", "glass"] as Theme[]).map((value) => (
+          {(["forest", "slate", "sunset"] as Theme[]).map((value) => (
             <button
               key={value}
               type="button"
@@ -501,7 +499,7 @@ function StartupGuide({
                 <span />
                 <span />
               </span>
-              {({ forest: "Forest", "black-glass": "Black Glass", glass: "Glass" })[value]}
+              {({ forest: "Forest", slate: "Slate", sunset: "Purple" })[value]}
             </button>
           ))}
         </fieldset>
@@ -979,8 +977,8 @@ function SettingsPage({
             {(
               [
                 ["forest", "Forest", "Green and cream"],
-                ["black-glass", "Black Glass", "Dark glass and frost"],
-                ["glass", "Glass", "Clear glass and light"],
+                ["slate", "Slate", "Cool blue gray"],
+                ["sunset", "Purple", "Violet and lavender"],
               ] as [Theme, string, string][]
             ).map(([value, label, description]) => (
               <button
@@ -1964,8 +1962,6 @@ function DeveloperToolsModal({
   const [oneTimePassword, setOneTimePassword] = useState("");
   const [resetPassword, setResetPassword] = useState("");
   const [resetConfirmed, setResetConfirmed] = useState(false);
-  const [crisisPassword, setCrisisPassword] = useState("");
-  const [crisisPasswordCustomized, setCrisisPasswordCustomized] = useState(false);
   const backdrop = useBackdropDismiss(onClose);
 
   const authorize = async (event: FormEvent) => {
@@ -1977,8 +1973,6 @@ function DeveloperToolsModal({
         body: JSON.stringify({ password }),
       });
       setAuthorized(true);
-      const status = await api("/dev/crisis-password");
-      setCrisisPasswordCustomized(status.customized);
     } catch (cause) {
       setError((cause as Error).message);
     }
@@ -1992,20 +1986,6 @@ function DeveloperToolsModal({
         body: JSON.stringify({ password }),
       });
       setOneTimePassword(result.password);
-    } catch (cause) {
-      setError((cause as Error).message);
-    }
-  };
-  const customizeCrisisPassword = async (event: FormEvent) => {
-    event.preventDefault();
-    setError("");
-    try {
-      await api("/dev/crisis-password", {
-        method: "POST",
-        body: JSON.stringify({ password: crisisPassword }),
-      });
-      setCrisisPassword("");
-      setCrisisPasswordCustomized(true);
     } catch (cause) {
       setError((cause as Error).message);
     }
@@ -2066,7 +2046,7 @@ function DeveloperToolsModal({
             <section>
               <h3>Theme</h3>
               <div className="theme-selector" role="radiogroup" aria-label="Developer theme">
-                {(["forest", "black-glass", "glass"] as Theme[]).map((value) => (
+                {(["forest", "slate", "sunset"] as Theme[]).map((value) => (
                   <button
                     key={value}
                     type="button"
@@ -2075,7 +2055,7 @@ function DeveloperToolsModal({
                     className={`theme-option theme-${value} ${theme === value ? "selected" : ""}`}
                     onClick={() => setTheme(value)}
                   >
-                    <span>{({ forest: "Forest", "black-glass": "Black Glass", glass: "Glass" })[value]}</span>
+                    <span>{({ forest: "Forest", slate: "Slate", sunset: "Purple" })[value]}</span>
                   </button>
                 ))}
               </div>
@@ -2090,33 +2070,6 @@ function DeveloperToolsModal({
                 <div className="one-time-password" aria-live="polite">
                   {oneTimePassword}
                 </div>
-              )}
-            </section>
-            <section>
-              <h3>Crisis developer password</h3>
-              {crisisPasswordCustomized ? (
-                <p>This password has been customized and can no longer be changed.</p>
-              ) : (
-                <>
-                  <p>The default password is abortmisson1. You can customize it once.</p>
-                  <form className="developer-tools-form" onSubmit={customizeCrisisPassword}>
-                    <label>
-                      <span>New crisis password</span>
-                      <input
-                        required
-                        minLength={8}
-                        maxLength={128}
-                        type="password"
-                        value={crisisPassword}
-                        onChange={(event) => setCrisisPassword(event.target.value)}
-                        autoComplete="new-password"
-                      />
-                    </label>
-                    <button className="secondary-button" type="submit">
-                      Customize once
-                    </button>
-                  </form>
-                </>
               )}
             </section>
             <section className="developer-reset">
