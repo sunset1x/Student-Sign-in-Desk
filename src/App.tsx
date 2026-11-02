@@ -80,7 +80,8 @@ type SignIn = {
 };
 
 async function api(path: string, options?: RequestInit) {
-  const response = await fetch(`/api${path}`, {
+  const apiBase = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+  const response = await fetch(`${apiBase}/api${path}`, {
     credentials: "include",
     headers: { "Content-Type": "application/json" },
     ...options,

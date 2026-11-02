@@ -43,67 +43,26 @@ npm start
 
 Open `http://localhost:3000`. Set a strong `SESSION_SECRET`, configure `DATABASE_PATH`, and serve the site behind HTTPS. The Express process stores administrator sessions in SQLite.
 
-## Deploy the frontend with GitHub Pages Actions
+## Deploy with GitHub Pages
 
-GitHub Pages can publish the React interface, but it cannot run the Express API, SQLite database, administrator sessions, or email delivery. The published static page is therefore a frontend preview; backend features require a Node.js host for the Express server and a persistent database.
+GitHub Pages cannot run the Express API or SQLite database. For the complete working kiosk, host the Express server on a Node.js provider and use GitHub Pages for the React frontend.
 
-1. Push the project to the repository's `main` branch.
-2. In GitHub, open **Settings → Pages**.
-3. Under **Build and deployment**, select **GitHub Actions**.
-4. Add `.github/workflows/deploy-pages.yml` with this workflow:
+The included `.github/workflows/deploy-pages.yml` workflow deploys the frontend automatically whenever `main` is updated.
 
-```yaml
-name: Deploy to GitHub Pages
+1. Deploy the Express server to a Node.js host such as Render, Railway, or Fly.io with a persistent writable disk for SQLite.
+2. Enable HTTPS and CORS for the Pages origin on the Express host.
+3. In the GitHub repository, open **Settings → Pages** and select **GitHub Actions**.
+4. Open **Settings → Secrets and variables → Actions → Variables** and add:
+   - Variable name: `SKULLY_API_URL`
+   - Value: the full HTTPS URL of the deployed Express server, for example `https://skully-api.example.com`
+5. Push the code to `main`. The workflow builds the frontend with the project repository base path and deploys it to GitHub Pages.
+6. Use the Pages URL shown by the deployment workflow or under **Settings → Pages**.
 
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
+The GitHub Pages frontend is not functional without a running backend configured through `SKULLY_API_URL`. GitHub does not provide a persistent server, SQLite storage, or session support for Pages sites.
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+For a completely self-contained GitHub Pages deployment, Express, SQLite, login sessions, and email delivery would need to be replaced by browser-compatible services, which is not supported by GitHub Pages.
 
-concurrency:
-  group: pages
-  cancel-in-progress: false
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-      - run: npm ci
-      - run: npm run build -- --base=/${{ github.event.repository.name }}/
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v4
-```
-
-Commit and push the workflow. Open the repository's **Actions** tab, wait for **Deploy to GitHub Pages** to finish, then use the published URL shown there or under **Settings → Pages**.
-
-If the repository is configured for a username-level `owner.github.io` site instead of a project site, change the build command to:
-
-```bash
-npm run build -- --base=/
-```
+If this repository is deployed as `owner.github.io`, change the workflow base path from `"/${{ github.event.repository.name }}/"` to `"/"`.
 
 ## Docker deployment
 
