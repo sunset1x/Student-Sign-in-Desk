@@ -107,6 +107,7 @@ export default function App() {
   const [emailTemplateOpen, setEmailTemplateOpen] = useState(false);
   const [logsRefreshing, setLogsRefreshing] = useState(false);
   const [startupGuideOpen, setStartupGuideOpen] = useState(false);
+  const [devToolsOpen, setDevToolsOpen] = useState(false);
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = window.localStorage.getItem("skully-theme");
     return saved === "slate" || saved === "sunset" ? saved : "forest";
@@ -154,6 +155,11 @@ export default function App() {
   }, [notice]);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      if (event.key === "F10") {
+        event.preventDefault();
+        setDevToolsOpen(true);
+        return;
+      }
       if (event.key === "Escape") {
         event.preventDefault();
         if (startupGuideOpen) return;
@@ -351,6 +357,15 @@ export default function App() {
           </div>
         </div>
       )}
+      <div className="project-credit">A Skully Project</div>
+      {devToolsOpen && (
+        <DeveloperToolsModal
+          theme={theme}
+          setTheme={setTheme}
+          onClose={() => setDevToolsOpen(false)}
+          onReset={() => window.location.reload()}
+        />
+      )}
       {modal && (
         <UnlockModal
           configured={passwordConfigured}
@@ -484,7 +499,7 @@ function StartupGuide({
                 <span />
                 <span />
               </span>
-              {value}
+              {({ forest: "Forest", slate: "Slate", sunset: "Purple" })[value]}
             </button>
           ))}
         </fieldset>
@@ -963,7 +978,7 @@ function SettingsPage({
               [
                 ["forest", "Forest", "Green and cream"],
                 ["slate", "Slate", "Cool blue gray"],
-                ["sunset", "Sunset", "Warm orange and purple"],
+                ["sunset", "Purple", "Violet and lavender"],
               ] as [Theme, string, string][]
             ).map(([value, label, description]) => (
               <button
@@ -1401,7 +1416,6 @@ function SettingsPage({
           </button>
         </div>
       )}
-      <div className="project-credit">A Skully Project</div>
       {resetOpen && (
         <ResetModal
           password={resetPassword}
@@ -1927,6 +1941,167 @@ function SettingsHeading({
       >
         <CircleHelp size={18} />
       </button>
+    </div>
+  );
+}
+
+function DeveloperToolsModal({
+  theme,
+  setTheme,
+  onClose,
+  onReset,
+}: {
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
+  onClose: () => void;
+  onReset: () => void;
+}) {
+  const [password, setPassword] = useState("");
+  const [authorized, setAuthorized] = useState(false);
+  const [error, setError] = useState("");
+  const [oneTimePassword, setOneTimePassword] = useState("");
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetConfirmed, setResetConfirmed] = useState(false);
+  const backdrop = useBackdropDismiss(onClose);
+
+  const authorize = async (event: FormEvent) => {
+    event.preventDefault();
+    setError("");
+    try {
+      await api("/dev/access", {
+        method: "POST",
+        body: JSON.stringify({ password }),
+      });
+      setAuthorized(true);
+    } catch (cause) {
+      setError((cause as Error).message);
+    }
+  };
+  const generatePassword = async () => {
+    setError("");
+    setOneTimePassword("");
+    try {
+      const result = await api("/dev/one-time-password", {
+        method: "POST",
+        body: JSON.stringify({ password }),
+      });
+      setOneTimePassword(result.password);
+    } catch (cause) {
+      setError((cause as Error).message);
+    }
+  };
+  const resetData = async (event: FormEvent) => {
+    event.preventDefault();
+    setError("");
+    try {
+      await api("/dev/reset", {
+        method: "POST",
+        body: JSON.stringify({ password: resetPassword }),
+      });
+      onReset();
+    } catch (cause) {
+      setError((cause as Error).message);
+    }
+  };
+
+  return (
+    <div className="modal-backdrop" role="presentation" {...backdrop}>
+      <div
+        className="modal-card developer-tools-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="developer-tools-title"
+      >
+        <div className="modal-heading">
+          <div>
+            <p className="modal-eyebrow">Restricted</p>
+            <h2 id="developer-tools-title">Developer tools</h2>
+          </div>
+          <button className="icon-button" type="button" onClick={onClose} aria-label="Close">
+            <X size={19} />
+          </button>
+        </div>
+        {!authorized ? (
+          <form className="developer-tools-form" onSubmit={authorize}>
+            <p>Enter the administrator password to use these tools.</p>
+            <label>
+              <span>Administrator password</span>
+              <input
+                autoFocus
+                required
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete="current-password"
+              />
+            </label>
+            {error && <div className="form-error">{error}</div>}
+            <div className="modal-actions">
+              <button className="secondary-button" type="button" onClick={onClose}>Cancel</button>
+              <button className="primary-button" type="submit">Unlock tools</button>
+            </div>
+          </form>
+        ) : (
+          <div className="developer-tools-content">
+            <section>
+              <h3>Theme</h3>
+              <div className="theme-selector" role="radiogroup" aria-label="Developer theme">
+                {(["forest", "slate", "sunset"] as Theme[]).map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    role="radio"
+                    aria-checked={theme === value}
+                    className={`theme-option theme-${value} ${theme === value ? "selected" : ""}`}
+                    onClick={() => setTheme(value)}
+                  >
+                    <span>{({ forest: "Forest", slate: "Slate", sunset: "Purple" })[value]}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>One-time administrator password</h3>
+              <p>Valid for one use for 10 minutes.</p>
+              <button className="secondary-button" type="button" onClick={generatePassword}>
+                Generate password
+              </button>
+              {oneTimePassword && (
+                <div className="one-time-password" aria-live="polite">
+                  {oneTimePassword}
+                </div>
+              )}
+            </section>
+            <section className="developer-reset">
+              <h3>Reset all data</h3>
+              <p>This permanently deletes sign-ins, teachers, settings, and the administrator password.</p>
+              {!resetConfirmed ? (
+                <button className="danger-button" type="button" onClick={() => setResetConfirmed(true)}>
+                  Reset all data
+                </button>
+              ) : (
+                <form onSubmit={resetData}>
+                  <label>
+                    <span>Administrator password</span>
+                    <input
+                      required
+                      type="password"
+                      value={resetPassword}
+                      onChange={(event) => setResetPassword(event.target.value)}
+                      autoComplete="current-password"
+                    />
+                  </label>
+                  <div className="modal-actions">
+                    <button className="secondary-button" type="button" onClick={() => setResetConfirmed(false)}>Cancel</button>
+                    <button className="danger-button" type="submit">Permanently reset</button>
+                  </div>
+                </form>
+              )}
+            </section>
+            {error && <div className="form-error">{error}</div>}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

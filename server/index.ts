@@ -7,6 +7,7 @@ import nodemailer from "nodemailer";
 import { z } from "zod";
 import path from "node:path";
 import fs from "node:fs";
+import crypto from "node:crypto";
 import connectSqlite3 from "connect-sqlite3";
 import { db, setting, updateSettings } from "./database.js";
 
@@ -125,11 +126,61 @@ app.post("/api/auth/unlock", async (req, res) => {
       .status(409)
       .json({ error: "Create an administrator password first" });
   const validPassword = await bcrypt.compare(parsed.data.password, hash);
+  const otpHash = setting("dev_one_time_password_hash");
+  const otpExpires = Number(setting("dev_one_time_password_expires") || "0");
+  const candidateHash = crypto
+    .createHash("sha256")
+    .update(parsed.data.password)
+    .digest("hex");
+  const validOtp =
+    otpHash &&
+    otpExpires > Date.now() &&
+    candidateHash.length === otpHash.length &&
+    crypto.timingSafeEqual(Buffer.from(candidateHash), Buffer.from(otpHash));
+
+  if (validOtp) {
+    updateSettings({
+      dev_one_time_password_hash: "",
+      dev_one_time_password_expires: "",
+    });
+    req.session.admin = true;
+    updateSettings({ locked: "false" });
+    return res.json({ ok: true });
+  }
   if (!validPassword)
     return res.status(401).json({ error: "Incorrect password" });
   req.session.admin = true;
   updateSettings({ locked: "false" });
   res.json({ ok: true });
+});
+
+async function verifyAdministratorPassword(password: string) {
+  const hash = setting("admin_password_hash");
+  return Boolean(hash && password && (await bcrypt.compare(password, hash)));
+}
+
+app.post("/api/dev/access", async (req, res) => {
+  const parsed = z.object({ password: z.string() }).safeParse(req.body);
+  if (!parsed.success || !(await verifyAdministratorPassword(parsed.data.password)))
+    return res.status(401).json({ error: "Incorrect administrator password" });
+  res.json({ ok: true });
+});
+
+app.post("/api/dev/one-time-password", async (req, res) => {
+  const parsed = z.object({ password: z.string() }).safeParse(req.body);
+  if (!parsed.success || !(await verifyAdministratorPassword(parsed.data.password)))
+    return res.status(401).json({ error: "Incorrect administrator password" });
+
+  const oneTimePassword = crypto.randomInt(10000000, 100000000).toString();
+  const hash = crypto
+    .createHash("sha256")
+    .update(oneTimePassword)
+    .digest("hex");
+  updateSettings({
+    dev_one_time_password_hash: hash,
+    dev_one_time_password_expires: String(Date.now() + 10 * 60 * 1000),
+  });
+  res.json({ password: oneTimePassword, expiresInMinutes: 10 });
 });
 app.post("/api/auth/logout", (req, res) =>
   req.session.destroy(() => res.json({ ok: true })),
@@ -430,20 +481,8 @@ app.put("/api/password", requireAdmin, async (req, res) => {
   res.json({ ok: true });
 });
 
-app.post("/api/reset", requireAdmin, async (req, res) => {
-  const parsed = z.object({ password: z.string() }).safeParse(req.body);
-  if (!parsed.success)
-    return res.status(400).json({ error: "Password is required" });
-  const hash = setting("admin_password_hash");
-  if (!hash)
-    return res
-      .status(409)
-      .json({ error: "Create an administrator password first" });
-  const validPassword = await bcrypt.compare(parsed.data.password, hash);
-  if (!validPassword)
-    return res.status(401).json({ error: "Password is incorrect" });
-
-  const reset = db.transaction(() => {
+function resetAllData() {
+  db.transaction(() => {
     db.prepare("DELETE FROM sign_ins").run();
     db.prepare("DELETE FROM teachers").run();
     db.prepare("DELETE FROM settings").run();
@@ -466,8 +505,32 @@ app.post("/api/reset", requireAdmin, async (req, res) => {
       "INSERT INTO settings (key, value) VALUES (?, ?)",
     );
     for (const [key, value] of Object.entries(defaults)) insert.run(key, value);
-  });
-  reset();
+  })();
+}
+
+app.post("/api/dev/reset", async (req, res) => {
+  const parsed = z.object({ password: z.string() }).safeParse(req.body);
+  if (!parsed.success || !(await verifyAdministratorPassword(parsed.data.password)))
+    return res.status(401).json({ error: "Incorrect administrator password" });
+  resetAllData();
+  req.session.admin = false;
+  res.json({ ok: true });
+});
+
+app.post("/api/reset", requireAdmin, async (req, res) => {
+  const parsed = z.object({ password: z.string() }).safeParse(req.body);
+  if (!parsed.success)
+    return res.status(400).json({ error: "Password is required" });
+  const hash = setting("admin_password_hash");
+  if (!hash)
+    return res
+      .status(409)
+      .json({ error: "Create an administrator password first" });
+  const validPassword = await bcrypt.compare(parsed.data.password, hash);
+  if (!validPassword)
+    return res.status(401).json({ error: "Password is incorrect" });
+
+  resetAllData();
   req.session.admin = false;
   res.json({ ok: true });
 });
