@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently -n server,client -c green,cyan \"npm run dev:server\" \"npm run dev:client\"",
-    "dev:client": "vite",
+    "dev:client": "vite --host 0.0.0.0 --strictPort",
     "dev:server": "tsx watch server/index.ts",
     "build": "tsc && vite build",
     "start": "NODE_ENV=production tsx server/index.ts",
